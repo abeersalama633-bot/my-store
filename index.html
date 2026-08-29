@@ -1,1 +1,86 @@
-<button onclick="window.print()" style="background:#0f3460">🖨️ طباعة التقرير</button>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pri - نظام المحل الذكي</title>
+<style>
+body{font-family:tahoma;background:#1a1a2e;padding:20px;color:white;margin:0}
+.login{background:white;color:#333;padding:30px;border-radius:15px;max-width:400px;margin:100px auto;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+.container{background:#16213e;color:white;padding:25px;border-radius:15px;max-width:900px;margin:auto;display:none;box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+.logo{font-size:40px;font-weight:bold;color:#e94560;margin-bottom:10px}
+input,button{padding:12px;margin:5px;border-radius:8px;border:1px solid #ccc;width:95%;box-sizing:border-box;font-size:16px}
+button{background:#e94560;color:white;border:none;cursor:pointer;font-weight:bold}
+button:hover{background:#ff6b81}
+.btn-print{background:#0f3460;width:100%;margin-top:15px}
+.del{background:#dc3545;padding:5px 10px;width:auto}
+table{width:100%;margin-top:20px;border-collapse:collapse;background:white;color:#333;border-radius:10px;overflow:hidden}
+th,td{border:1px solid #ddd;padding:12px;text-align:center}
+th{background:#0f3460;color:white}
+.total{font-size:22px;font-weight:bold;color:#4caf50;margin-top:15px;text-align:center}
+@media print { .login, .container button, .del {display:none} body{background:white} }
+</style>
+</head>
+<body>
+
+<div class="login" id="login">
+<div class="logo">Pri</div>
+<h2>نظام المحل الذكي</h2>
+<input id="pass" type="password" placeholder="ادخل كلمة السر">
+<button onclick="login()">دخول</button>
+<p style="font-size:12px;color:#666">كلمة السر الافتراضية: 1234</p>
+</div>
+
+<div class="container" id="app">
+<div class="logo">Pri</div>
+<h1>لوحة التحكم</h1>
+
+<input id="n" placeholder="اسم الصنف">
+<input id="s" type="number" placeholder="سعر البيع">
+<input id="c" type="number" placeholder="سعر التكلفة">
+<button onclick="addItem()">اضافة صنف +</button>
+
+<table id="table">
+<tr><th>الصنف</th><th>سعر البيع</th><th>التكلفة</th><th>المكسب</th><th>حذف</th></tr>
+</table>
+
+<div class="total" id="total">اجمالي المكسب: 0 جنيه</div>
+<button class="btn-print" onclick="window.print()">🖨️ طباعة التقرير</button>
+</div>
+
+<script>
+function login(){
+  if(document.getElementById('pass').value=='1234'){
+    document.getElementById('login').style.display='none';
+    document.getElementById('app').style.display='block';
+    showItems();
+  }else{alert('كلمة السر خطأ')}
+}
+
+let items = JSON.parse(localStorage.getItem('pri_items_v2')) || [];
+
+function showItems(){
+  let table = document.getElementById('table');
+  table.innerHTML = '<tr><th>الصنف</th><th>سعر البيع</th><th>التكلفة</th><th>المكسب</th><th>حذف</th></tr>';
+  let total = 0;
+  items.forEach((i,index)=>{
+    let profit = i.s - i.c;
+    total += profit;
+    table.innerHTML += `<tr><td>${i.n}</td><td>${i.s}</td><td>${i.c}</td><td>${profit}</td><td><button class="del" onclick="del(${index})">X</button></td></tr>`;
+  });
+  document.getElementById('total').innerText = `اجمالي المكسب: ${total} جنيه`;
+  localStorage.setItem('pri_items_v2', JSON.stringify(items));
+}
+
+function addItem(){
+  let n=document.getElementById('n').value;
+  let s=parseFloat(document.getElementById('s').value);
+  let c=parseFloat(document.getElementById('c').value);
+  if(n&&s&&c){items.push({n,s,c}); showItems();}
+  document.getElementById('n').value='';document.getElementById('s').value='';document.getElementById('c').value='';
+}
+
+function del(i){if(confirm('متأكدة عايزة تمسحي؟')){items.splice(i,1); showItems();}}
+</script>
+</body>
+</html>
