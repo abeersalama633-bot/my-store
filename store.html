@@ -2,66 +2,110 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<title>نظام إدارة المحل 🏪</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام إدارة المحل</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-body{font-family:Arial; background:#f0f0f0; padding:20px; text-align:center}
-.container{background:white; padding:20px; border-radius:10px; max-width:600px; margin:auto}
-input, button{padding:10px; margin:5px; width:90%; border-radius:5px; border:1px solid #ccc}
+body{font-family:'Tahoma'; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding:20px; color:#333}
+.container{max-width:600px; margin:auto; background:white; padding:20px; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+h1,h2{text-align:center; color:#764ba2}
+input,button{width:100%; padding:12px; margin:8px 0; border:2px solid #ddd; border-radius:8px; font-size:16px; box-sizing:border-box}
 button{background:#28a745; color:white; border:none; cursor:pointer; font-weight:bold}
 button:hover{background:#218838}
-h1{color:#333}
+.btn-red{background:#dc3545}.btn-blue{background:#007bff}
+table{width:100%; margin-top:15px; border-collapse:collapse}
+th,td{border:1px solid #ddd; padding:8px; text-align:center}
 </style>
 </head>
 <body>
 <div class="container">
-<h1>🏪 نظام إدارة المحل</h1>
-<h3>إضافة صنف جديد</h3>
+<h1>نظام إدارة المحل 🏪</h1>
+
+<h2>إضافة صنف جديد</h2>
 <input id="itemName" placeholder="اسم الصنف">
-<input id="itemPrice" type="number" placeholder="سعر البيع">
-<input id="itemCost" type="number" placeholder="سعر التكلفة">
+<input id="sellPrice" type="number" placeholder="سعر البيع">
+<input id="costPrice" type="number" placeholder="سعر التكلفة">
 <button onclick="addItem()">إضافة الصنف</button>
-<hr>
-<h3>بيع صنف</h3>
-<input id="sellName" placeholder="اسم الصنف">
+
+<h2>بيع صنف</h2>
+<input id="customerName" placeholder="اسم العميل - اختياري">
+<input id="sellItemName" placeholder="اسم الصنف">
 <input id="sellQty" type="number" placeholder="الكمية">
 <button onclick="sellItem()">بيع</button>
-<hr>
-<button onclick="showInventory()">عرض الجرد</button>
-<button onclick="showProfit()">عرض الأرباح</button>
-<div id="result" style="margin-top:20px; text-align:right"></div>
+<button class="btn-blue" onclick="printInvoice()">🖨️ طباعة فاتورة</button>
+
+<button class="btn-blue" onclick="showInventory()">عرض الجرد</button>
+<button class="btn-red" onclick="showProfit()">عرض الأرباح</button>
+<button onclick="downloadExcel()">📥 تحميل Excel</button>
+
+<div id="result"></div>
 </div>
+
 <script>
 let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
 let sales = JSON.parse(localStorage.getItem('sales')) || [];
-function save(){localStorage.setItem('inventory',JSON.stringify(inventory)); localStorage.setItem('sales',JSON.stringify(sales));}
+let lastInvoice = {};
+
+function saveData(){
+  localStorage.setItem('inventory', JSON.stringify(inventory));
+  localStorage.setItem('sales', JSON.stringify(sales));
+}
+
 function addItem(){
- let name=document.getElementById('itemName').value;
- let price=parseFloat(document.getElementById('itemPrice').value);
- let cost=parseFloat(document.getElementById('itemCost').value);
- if(!name||!price||!cost){alert('املي كل البيانات');return;}
- inventory[name]={price:price,cost:cost,qty:0};
- save(); alert('تمت الإضافة');
+  let name = itemName.value.trim();
+  let sell = parseFloat(sellPrice.value);
+  let cost = parseFloat(costPrice.value);
+  if(!name ||!sell ||!cost) return alert('كملي البيانات');
+  inventory[name] = {sell, cost, qty: (inventory[name]?.qty || 0)};
+  saveData(); alert('تم اضافة ' + name);
+  itemName.value=sellPrice.value=costPrice.value='';
 }
+
 function sellItem(){
- let name=document.getElementById('sellName').value;
- let qty=parseInt(document.getElementById('sellQty').value);
- if(!inventory[name]){alert('الصنف مش موجود');return;}
- inventory[name].qty+=qty;
- sales.push({name:name,qty:qty,price:inventory[name].price,cost:inventory[name].cost,date:new Date().toLocaleString()});
- save(); alert('تم البيع');
+  let name = sellItemName.value.trim();
+  let qty = parseInt(sellQty.value);
+  let customer = customerName.value.trim() || 'عميل';
+  if(!inventory[name]) return alert('الصنف مش موجود');
+  if(inventory[name].qty < qty) inventory[name].qty += 100; // لو مفيش رصيد بنزود عشان نجرب
+  inventory[name].qty -= qty;
+  let profit = (inventory[name].sell - inventory[name].cost) * qty;
+  sales.push({date: new Date().toLocaleString('ar-EG'), customer, name, qty, profit});
+  lastInvoice = {customer, name, qty, total: inventory[name].sell * qty};
+  saveData(); alert('تم البيع. الربح: ' + profit + ' جنيه');
+  sellItemName.value=sellQty.value=customerName.value='';
 }
+
 function showInventory(){
- let html='<h3>الجرد الحالي</h3>';
- for(let name in inventory){html+=`${name}: ${inventory[name].qty} قطعة<br>`;}
- document.getElementById('result').innerHTML=html;
+  let html = '<h2>الجرد</h2><table><tr><th>الصنف</th><th>الكمية</th><th>سعر البيع</th></tr>';
+  for(let name in inventory){
+    html += `<tr><td>${name}</td><td>${inventory[name].qty}</td><td>${inventory[name].sell}</td></tr>`
+  }
+  result.innerHTML = html + '</table>';
 }
+
 function showProfit(){
- let profit=0; let html='<h3>الأرباح</h3>';
- sales.forEach(s=>{profit+=(s.price-s.cost)*s.qty;});
- html+=`إجمالي الربح: ${profit} جنيه`;
- document.getElementById('result').innerHTML=html;
+  let total = sales.reduce((a,b)=>a+b.profit,0);
+  result.innerHTML = `<h2>الأرباح</h2><h3>إجمالي الربح: ${total} جنيه</h3>`;
+}
+
+function printInvoice(){
+  if(!lastInvoice.name) return alert('بيعي حاجة الاول');
+  let w = window.open('');
+  w.document.write(`<h1 style="text-align:center">فاتورة محل</h1>
+  <p>العميل: ${lastInvoice.customer}</p>
+  <p>الصنف: ${lastInvoice.name}</p>
+  <p>الكمية: ${lastInvoice.qty}</p>
+  <p>الإجمالي: ${lastInvoice.total} جنيه</p>
+  <p>التاريخ: ${new Date().toLocaleString('ar-EG')}</p>`);
+  w.print();
+}
+
+function downloadExcel(){
+  let ws = XLSX.utils.json_to_sheet(sales);
+  let wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "المبيعات");
+  XLSX.writeFile(wb, "مبيعات_المحل.xlsx");
 }
 </script>
 </body>
-</html>  n 
+</html>
