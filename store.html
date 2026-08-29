@@ -2,33 +2,66 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>نظام ادارة المحل</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام إدارة المحل</title>
 <style>
-body{font-family:Tahoma;background:#f4f6f9;padding:20px}.container{max-width:1100px;margin:auto;background:white;padding:20px;border-radius:10px}h1{text-align:center;color:#2c3e50}.stats{display:flex;gap:10px;margin:15px 0}.stat-box{flex:1;padding:15px;border-radius:8px;color:white;text-align:center;font-size:18px;font-weight:bold}.add-box{margin:15px 0;padding:15px;background:#ecf0f1;border-radius:8px}.add-box input{padding:10px;margin:5px 1%;border:1px solid #ddd;border-radius:5px;width:18%}.btn{padding:10px 20px;margin:5px;border:none;border-radius:6px;cursor:pointer;color:white;font-weight:bold}.btn-add{background:#27ae60;width:100%}.btn-sale{background:#3498db}.btn-excel{background:#27ae60}.btn-delete{background:#e74c3c}table{width:100%;border-collapse:collapse;margin-top:20px}th{background:#e67e22;color:white;padding:12px}td{border:1px solid #ddd;padding:10px;text-align:center}.profit{color:green;font-weight:bold}
+body{font-family:Arial; background:#f0f0f0; padding:20px; text-align:center}
+.container{background:white; padding:20px; border-radius:10px; max-width:600px; margin:auto}
+input, button{padding:10px; margin:5px; width:90%; border-radius:5px; border:1px solid #ccc}
+button{background:#28a745; color:white; border:none; cursor:pointer; font-weight:bold}
+button:hover{background:#218838}
+h1{color:#333}
 </style>
 </head>
 <body>
 <div class="container">
-<h1>نظام ادارة المحل 📦</h1>
-<div class="stats">
-<div class="stat-box" style="background:#3498db">عدد الاصناف: <span id="count">0</span></div>
-<div class="stat-box" style="background:#27ae60">اجمالي المبيعات: <span id="totalSales">0</span> ج</div>
-<div class="stat-box" style="background:#e67e22">اجمالي الارباح: <span id="totalProfit">0</span> ج</div>
+<h1>🏪 نظام إدارة المحل</h1>
+<h3>إضافة صنف جديد</h3>
+<input id="itemName" placeholder="اسم الصنف">
+<input id="itemPrice" type="number" placeholder="سعر البيع">
+<input id="itemCost" type="number" placeholder="سعر التكلفة">
+<button onclick="addItem()">إضافة الصنف</button>
+<hr>
+<h3>بيع صنف</h3>
+<input id="sellName" placeholder="اسم الصنف">
+<input id="sellQty" type="number" placeholder="الكمية">
+<button onclick="sellItem()">بيع</button>
+<hr>
+<button onclick="showInventory()">عرض الجرد</button>
+<button onclick="showProfit()">عرض الأرباح</button>
+<div id="result" style="margin-top:20px; text-align:right"></div>
 </div>
-<div class="add-box">
-<h3>اضافة صنف جديد</h3>
-<input id="name" placeholder="اسم الصنف"><input id="buy" placeholder="سعر الشراء" type="number"><input id="sell" placeholder="سعر البيع" type="number"><input id="qty" placeholder="الكمية" type="number">
-<button class="btn btn-add" onclick="addItem()">اضافة صنف</button></div>
-<button class="btn btn-excel" onclick="exportCSV()">تصدير اكسل 📊</button>
-<table><thead><tr><th>الصنف</th><th>سعر الشراء</th><th>سعر البيع</th><th>الكمية</th><th>الربح</th><th>بيع</th><th>مسح</th></tr></thead><tbody id="itemsTable"></tbody></table></div>
 <script>
-let items=JSON.parse(localStorage.getItem('store'))||[];let totalSales=parseFloat(localStorage.getItem('totalSales'))||0;let totalProfit=parseFloat(localStorage.getItem('totalProfit'))||0;
-function displayItems(){let tbody=document.getElementById('itemsTable');tbody.innerHTML='';items.forEach((s,i)=>{let profit=s.sell-s.buy;tbody.innerHTML+=`<tr><td>${s.name}</td><td>${s.buy} ج</td><td>${s.sell} ج</td><td>${s.qty}</td><td class="profit">${profit} ج</td><td><button class="btn btn-sale" onclick="sellItem(${i})">بيع 1</button></td><td><button class="btn btn-delete" onclick="deleteItem(${i})">مسح</button></td></tr>`});document.getElementById('count').innerText=items.length;document.getElementById('totalSales').innerText=totalSales.toFixed(2);document.getElementById('totalProfit').innerText=totalProfit.toFixed(2);}
-function addItem(){let n=document.getElementById('name').value;let b=parseFloat(document.getElementById('buy').value);let s=parseFloat(document.getElementById('sell').value);let q=parseInt(document.getElementById('qty').value);if(!n||!b||!s||!q)return alert('لازم تملي كل الخانات');items.push({name:n,buy:b,sell:s,qty:q});saveData();displayItems();document.getElementById('name').value='';document.getElementById('buy').value='';document.getElementById('sell').value='';document.getElementById('qty').value='';}
-function sellItem(i){if(items[i].qty<=0)return alert('الكمية خلصت');let profit=items[i].sell-items[i].buy;items[i].qty-=1;totalSales+=items[i].sell;totalProfit+=profit;saveData();displayItems();}
-function deleteItem(i){if(confirm('متأكدة؟')){items.splice(i,1);saveData();displayItems();}}
-function saveData(){localStorage.setItem('store',JSON.stringify(items));localStorage.setItem('totalSales',totalSales);localStorage.setItem('totalProfit',totalProfit);}
-function exportCSV(){let csv='الصنف,سعر الشراء,سعر البيع,الكمية,الربح\n'+items.map(s=>`${s.name},${s.buy},${s.sell},${s.qty},${s.sell-s.buy}`).join('\n');let blob=new Blob(['\ufeff'+csv],{type:'text/csv'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='مخزن_المحل.csv';a.click();}
-displayItems();
+let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
+let sales = JSON.parse(localStorage.getItem('sales')) || [];
+function save(){localStorage.setItem('inventory',JSON.stringify(inventory)); localStorage.setItem('sales',JSON.stringify(sales));}
+function addItem(){
+ let name=document.getElementById('itemName').value;
+ let price=parseFloat(document.getElementById('itemPrice').value);
+ let cost=parseFloat(document.getElementById('itemCost').value);
+ if(!name||!price||!cost){alert('املي كل البيانات');return;}
+ inventory[name]={price:price,cost:cost,qty:0};
+ save(); alert('تمت الإضافة');
+}
+function sellItem(){
+ let name=document.getElementById('sellName').value;
+ let qty=parseInt(document.getElementById('sellQty').value);
+ if(!inventory[name]){alert('الصنف مش موجود');return;}
+ inventory[name].qty+=qty;
+ sales.push({name:name,qty:qty,price:inventory[name].price,cost:inventory[name].cost,date:new Date().toLocaleString()});
+ save(); alert('تم البيع');
+}
+function showInventory(){
+ let html='<h3>الجرد الحالي</h3>';
+ for(let name in inventory){html+=`${name}: ${inventory[name].qty} قطعة<br>`;}
+ document.getElementById('result').innerHTML=html;
+}
+function showProfit(){
+ let profit=0; let html='<h3>الأرباح</h3>';
+ sales.forEach(s=>{profit+=(s.price-s.cost)*s.qty;});
+ html+=`إجمالي الربح: ${profit} جنيه`;
+ document.getElementById('result').innerHTML=html;
+}
 </script>
-</body></html>
+</body>
+</html>
