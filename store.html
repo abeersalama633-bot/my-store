@@ -2,125 +2,33 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نظام ادارة المحل</title>
 <style>
-    body { font-family: 'Tahoma'; background: #f4f6f9; padding: 20px; margin: 0; }
-   .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px #ccc; }
-    h1 { text-align: center; color: #2c3e50; }
-   .stats { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
-   .stat-box { flex:1; padding:15px; border-radius:8px; color:white; text-align:center; font-size:18px; font-weight:bold; min-width: 150px; }
-   .add-box { margin:15px 0; padding:15px; background:#ecf0f1; border-radius:8px }
-   .add-box input { padding: 10px; margin: 5px 1%; border: 1px solid #ddd; border-radius: 5px; width: 18%; box-sizing: border-box; }
-   .btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; font-size: 16px; }
-   .btn-add { background:#27ae60; width:100% }
-   .btn-sale { background:#3498db; }
-   .btn-excel { background:#27ae60; }
-   .btn-delete { background:#e74c3c; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th { background: #e67e22; color: white; padding: 12px; text-align: center; }
-    td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-   .profit { color: green; font-weight:bold; }
-   .low-stock { background: #ffdddd!important; }
+body{font-family:Tahoma;background:#f4f6f9;padding:20px}.container{max-width:1100px;margin:auto;background:white;padding:20px;border-radius:10px}h1{text-align:center;color:#2c3e50}.stats{display:flex;gap:10px;margin:15px 0}.stat-box{flex:1;padding:15px;border-radius:8px;color:white;text-align:center;font-size:18px;font-weight:bold}.add-box{margin:15px 0;padding:15px;background:#ecf0f1;border-radius:8px}.add-box input{padding:10px;margin:5px 1%;border:1px solid #ddd;border-radius:5px;width:18%}.btn{padding:10px 20px;margin:5px;border:none;border-radius:6px;cursor:pointer;color:white;font-weight:bold}.btn-add{background:#27ae60;width:100%}.btn-sale{background:#3498db}.btn-excel{background:#27ae60}.btn-delete{background:#e74c3c}table{width:100%;border-collapse:collapse;margin-top:20px}th{background:#e67e22;color:white;padding:12px}td{border:1px solid #ddd;padding:10px;text-align:center}.profit{color:green;font-weight:bold}
 </style>
 </head>
 <body>
 <div class="container">
-    <h1>نظام ادارة المحل 📦</h1>
-
-    <div class="stats">
-        <div class="stat-box" style="background:#3498db">عدد الاصناف: <span id="count">0</span></div>
-        <div class="stat-box" style="background:#27ae60">اجمالي المبيعات: <span id="totalSales">0</span> ج</div>
-        <div class="stat-box" style="background:#e67e22">اجمالي الارباح: <span id="totalProfit">0</span> ج</div>
-    </div>
-
-    <div class="add-box">
-        <h3>اضافة صنف جديد</h3>
-        <input id="name" placeholder="اسم الصنف">
-        <input id="buy" placeholder="سعر الشراء" type="number">
-        <input id="sell" placeholder="سعر البيع" type="number">
-        <input id="qty" placeholder="الكمية" type="number">
-        <button class="btn btn-add" onclick="addItem()">اضافة صنف</button>
-    </div>
-
-    <button class="btn btn-excel" onclick="exportCSV()">تصدير اكسل 📊</button>
-
-    <table>
-        <thead>
-            <tr>
-                <th>الصنف</th><th>سعر الشراء</th><th>سعر البيع</th><th>الكمية</th><th>الربح للقطعة</th><th>بيع</th><th>مسح</th>
-            </tr>
-        </thead>
-        <tbody id="itemsTable"></tbody>
-    </table>
+<h1>نظام ادارة المحل 📦</h1>
+<div class="stats">
+<div class="stat-box" style="background:#3498db">عدد الاصناف: <span id="count">0</span></div>
+<div class="stat-box" style="background:#27ae60">اجمالي المبيعات: <span id="totalSales">0</span> ج</div>
+<div class="stat-box" style="background:#e67e22">اجمالي الارباح: <span id="totalProfit">0</span> ج</div>
 </div>
-
+<div class="add-box">
+<h3>اضافة صنف جديد</h3>
+<input id="name" placeholder="اسم الصنف"><input id="buy" placeholder="سعر الشراء" type="number"><input id="sell" placeholder="سعر البيع" type="number"><input id="qty" placeholder="الكمية" type="number">
+<button class="btn btn-add" onclick="addItem()">اضافة صنف</button></div>
+<button class="btn btn-excel" onclick="exportCSV()">تصدير اكسل 📊</button>
+<table><thead><tr><th>الصنف</th><th>سعر الشراء</th><th>سعر البيع</th><th>الكمية</th><th>الربح</th><th>بيع</th><th>مسح</th></tr></thead><tbody id="itemsTable"></tbody></table></div>
 <script>
-let items = JSON.parse(localStorage.getItem('store')) || [];
-let totalSales = parseFloat(localStorage.getItem('totalSales')) || 0;
-let totalProfit = parseFloat(localStorage.getItem('totalProfit')) || 0;
-
-function displayItems(){
-    let tbody = document.getElementById('itemsTable');
-    tbody.innerHTML = '';
-    items.forEach((s,i)=>{
-        let profit = s.sell - s.buy;
-        let rowClass = s.qty < 3? 'class="low-stock"' : '';
-        tbody.innerHTML += `<tr ${rowClass}>
-            <td>${s.name}</td>
-            <td>${s.buy} ج</td>
-            <td>${s.sell} ج</td>
-            <td>${s.qty}</td>
-            <td class="profit">${profit} ج</td>
-            <td><button class="btn btn-sale" onclick="sellItem(${i})">بيع 1</button></td>
-            <td><button class="btn btn-delete" onclick="deleteItem(${i})">مسح</button></td>
-        </tr>`;
-    });
-    document.getElementById('count').innerText = items.length;
-    document.getElementById('totalSales').innerText = totalSales.toFixed(2);
-    document.getElementById('totalProfit').innerText = totalProfit.toFixed(2);
-}
-
-function addItem(){
-    let n=document.getElementById('name').value;
-    let b=parseFloat(document.getElementById('buy').value);
-    let s=parseFloat(document.getElementById('sell').value);
-    let q=parseInt(document.getElementById('qty').value);
-    if(!n ||!b ||!s ||!q) return alert('لازم تملي كل الخانات');
-    if(s < b) return alert('سعر البيع لازم يكون اكبر من سعر الشراء');
-
-    items.push({name:n, buy:b, sell:s, qty:q});
-    saveData();
-    displayItems();
-    document.getElementById('name').value='';
-    document.getElementById('buy').value='';
-    document.getElementById('sell').value='';
-    document.getElementById('qty').value='';
-}
-
-function sellItem(i){
-    if(items[i].qty <= 0) return alert('الكمية خلصت');
-    let profit = items[i].sell - items[i].buy;
-    items[i].qty -= 1;
-    totalSales = totalSales + items[i].sell;
-    totalProfit = totalProfit + profit;
-    saveData();
-    displayItems();
-    alert(`تم بيع ${items[i].name} \nالربح: ${profit} ج`);
-}
-
-function deleteItem(i){if(confirm('متأكدة عايزة تمسحي الصنف؟')){items.splice(i,1);saveData();displayItems();}}
-function saveData(){
-    localStorage.setItem('store',JSON.stringify(items));
-    localStorage.setItem('totalSales',totalSales);
-    localStorage.setItem('totalProfit',totalProfit);
-}
-function exportCSV(){
-    let csv = 'الصنف,سعر الشراء,سعر البيع,الكمية,الربح\n' + items.map(s=>`${s.name},${s.buy},${s.sell},${s.qty},${s.sell-s.buy}`).join('\n');
-    let blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
-    let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'مخزن_المحل.csv'; a.click();
-}
+let items=JSON.parse(localStorage.getItem('store'))||[];let totalSales=parseFloat(localStorage.getItem('totalSales'))||0;let totalProfit=parseFloat(localStorage.getItem('totalProfit'))||0;
+function displayItems(){let tbody=document.getElementById('itemsTable');tbody.innerHTML='';items.forEach((s,i)=>{let profit=s.sell-s.buy;tbody.innerHTML+=`<tr><td>${s.name}</td><td>${s.buy} ج</td><td>${s.sell} ج</td><td>${s.qty}</td><td class="profit">${profit} ج</td><td><button class="btn btn-sale" onclick="sellItem(${i})">بيع 1</button></td><td><button class="btn btn-delete" onclick="deleteItem(${i})">مسح</button></td></tr>`});document.getElementById('count').innerText=items.length;document.getElementById('totalSales').innerText=totalSales.toFixed(2);document.getElementById('totalProfit').innerText=totalProfit.toFixed(2);}
+function addItem(){let n=document.getElementById('name').value;let b=parseFloat(document.getElementById('buy').value);let s=parseFloat(document.getElementById('sell').value);let q=parseInt(document.getElementById('qty').value);if(!n||!b||!s||!q)return alert('لازم تملي كل الخانات');items.push({name:n,buy:b,sell:s,qty:q});saveData();displayItems();document.getElementById('name').value='';document.getElementById('buy').value='';document.getElementById('sell').value='';document.getElementById('qty').value='';}
+function sellItem(i){if(items[i].qty<=0)return alert('الكمية خلصت');let profit=items[i].sell-items[i].buy;items[i].qty-=1;totalSales+=items[i].sell;totalProfit+=profit;saveData();displayItems();}
+function deleteItem(i){if(confirm('متأكدة؟')){items.splice(i,1);saveData();displayItems();}}
+function saveData(){localStorage.setItem('store',JSON.stringify(items));localStorage.setItem('totalSales',totalSales);localStorage.setItem('totalProfit',totalProfit);}
+function exportCSV(){let csv='الصنف,سعر الشراء,سعر البيع,الكمية,الربح\n'+items.map(s=>`${s.name},${s.buy},${s.sell},${s.qty},${s.sell-s.buy}`).join('\n');let blob=new Blob(['\ufeff'+csv],{type:'text/csv'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='مخزن_المحل.csv';a.click();}
 displayItems();
 </script>
-</body>
-</html>  
+</body></html>
