@@ -1,2 +1,57 @@
- 
-<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>نظام المحل</title><style>body{font-family:tahoma;background:#667eea;padding:20px;text-align:center;color:white}div{background:white;color:#333;padding:20px;border-radius:15px;max-width:500px;margin:auto}input,button{width:90%;padding:12px;margin:8px;border-radius:8px;border:1px solid #ccc}button{background:#28a745;color:white;font-weight:bold}</style></head><body><div><h1>نظام إدارة المحل 🏪</h1><input id="n" placeholder="اسم الصنف"><input id="s" type="number" placeholder="سعر البيع"><input id="c" type="number" placeholder="سعر التكلفة"><button onclick="alert('تم الحفظ')">حفظ</button></div></body></html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>نظام المحل</title>
+<style>
+body{font-family:tahoma;background:linear-gradient(135deg,#667eea,#764ba2);padding:20px;color:white}
+.container{background:white;color:#333;padding:25px;border-radius:15px;max-width:800px;margin:auto}
+input,button{padding:10px;margin:5px;border-radius:8px;border:1px solid #ccc}
+button{background:#28a745;color:white;border:none;cursor:pointer;font-weight:bold}
+button:hover{background:#218838}
+table{width:100%;margin-top:20px;border-collapse:collapse}
+th,td{border:1px solid #ddd;padding:10px;text-align:center}
+th{background:#667eea;color:white}
+.total{font-size:20px;font-weight:bold;color:#28a745;margin-top:15px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>نظام إدارة المحل 🏪</h1>
+<input id="n" placeholder="اسم الصنف">
+<input id="s" type="number" placeholder="سعر البيع">
+<input id="c" type="number" placeholder="سعر التكلفة">
+<button onclick="addItem()">اضافة +</button>
+
+<table id="table">
+<tr><th>الصنف</th><th>سعر البيع</th><th>التكلفة</th><th>المكسب</th></tr>
+</table>
+
+<div class="total" id="total">اجمالي المكسب: 0 جنيه</div>
+</div>
+
+<script>
+let items = JSON.parse(localStorage.getItem('items')) || [];
+function showItems(){
+  let table = document.getElementById('table');
+  table.innerHTML = '<tr><th>الصنف</th><th>سعر البيع</th><th>التكلفة</th><th>المكسب</th></tr>';
+  let total = 0;
+  items.forEach(i=>{
+    let profit = i.s - i.c;
+    total += profit;
+    table.innerHTML += `<tr><td>${i.n}</td><td>${i.s}</td><td>${i.c}</td><td>${profit}</td></tr>`;
+  });
+  document.getElementById('total').innerText = `اجمالي المكسب: ${total} جنيه`;
+  localStorage.setItem('items', JSON.stringify(items));
+}
+function addItem(){
+  let n=document.getElementById('n').value;
+  let s=parseFloat(document.getElementById('s').value);
+  let c=parseFloat(document.getElementById('c').value);
+  if(n&&s&&c){items.push({n,s,c}); showItems();}
+  document.getElementById('n').value='';document.getElementById('s').value='';document.getElementById('c').value='';
+}
+showItems();
+</script>
+</body>
+</html>
